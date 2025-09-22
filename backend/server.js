@@ -30,6 +30,19 @@ app.get("/health", (req, res) => {
 });
 
 // Socket.IO setup
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (!token) return next(new Error("Authentication error!"));
+
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    socket.userId = payload.userId;
+    next();
+  } catch {
+    next(new Error("Authentication error!"));
+  }
+});
+
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
