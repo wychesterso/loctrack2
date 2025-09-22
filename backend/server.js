@@ -36,6 +36,8 @@ app.get("/health", (req, res) => {
 });
 
 // Socket.IO setup
+
+// authentication middleware
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) return next(new Error("Authentication error!"));
@@ -49,9 +51,53 @@ io.use((socket, next) => {
   }
 });
 
+// event listener for connected sockets
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
+  // put socket in private room for direct messaging
+  socket.join(`user:${socket.userId}`);
+
+  // receive location updates
+  socket.on("location:update", async ({ lat, lng }) => {
+    try {
+      //// convert to PostGIS POINT WKB
+      //const pointWKB = Buffer.from(`0101000020E6100000${lat.toString(16)}${lng.toString(16)}`, "hex");
+      //
+      //// insert or update with new location
+      //await prisma.location.upsert({
+      //  where: { userId: socket.userId },
+      //  update: { point: pointWKB },
+      //  create: { userId: socket.userId, point: pointWKB },
+      //});
+
+      // insert or update user's location in PostGIS
+      await prisma.$executeRaw`
+        INSERT INTO "Location" ("userId", "point")
+        VALUES (${socket.userId}, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326))
+        ON CONFLICT ("userId")
+        DO UPDATE SET "point" = EXCLUDED."point", "updatedAt" = now();
+      `;
+
+      // find users allowed to see this location
+      const shares = await prisma.share.findMany({
+        where: { fromUserId: socket.userId, isActive: true },
+      });
+
+      // send update
+      shares.forEach((share) => {
+        io.to(`user:${share.toUserId}`).emit("location:update", {
+          userId: socket.userId,
+          lat,
+          lng,
+        });
+      });
+    } catch (err) {
+      console.error("Location update error: ", err);
+    }
+  });
+
+  // handle disconnect
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
   });
