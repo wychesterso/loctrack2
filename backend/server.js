@@ -18,6 +18,12 @@ app.use(express.json());
 const authRoutes = require("./routes/auth");
 app.use("/auth", authRoutes);
 
+// profile route
+app.get("/profile", authMiddleware, async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.userId } });
+  res.json({ email: user.email });
+});
+
 // REST test route
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
