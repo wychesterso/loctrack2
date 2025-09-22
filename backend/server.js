@@ -14,12 +14,16 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 
+// mount auth routes
+const authRoutes = require("./routes/auth");
+app.use("/auth", authRoutes);
+
 // REST test route
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// Socket.IO test
+// Socket.IO setup
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
