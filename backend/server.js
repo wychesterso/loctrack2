@@ -2,6 +2,12 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
+const { PrismaClient } = require("@prisma/client");
+const authMiddleware = require("./middleware/auth");
+
+const prisma = new PrismaClient();
+const JWT_SECRET = process.env.JWT_SECRET || "superdupersecretkey";
 
 const app = express();
 const server = http.createServer(app);
@@ -18,7 +24,7 @@ app.use(express.json());
 const authRoutes = require("./routes/auth");
 app.use("/auth", authRoutes);
 
-// profile route
+// protected profile route
 app.get("/profile", authMiddleware, async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.userId } });
   res.json({ email: user.email });
