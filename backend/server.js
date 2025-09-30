@@ -64,20 +64,20 @@ io.on("connection", (socket) => {
       //// convert to PostGIS POINT WKB
       //const pointWKB = Buffer.from(`0101000020E6100000${lat.toString(16)}${lng.toString(16)}`, "hex");
       //
-      //// insert or update with new location
-      //await prisma.location.upsert({
-      //  where: { userId: socket.userId },
-      //  update: { point: pointWKB },
-      //  create: { userId: socket.userId, point: pointWKB },
-      //});
+      // insert or update with new location
+      await prisma.location.upsert({
+        where: { userId: socket.userId },
+        update: { lat, lng },
+        create: { userId: socket.userId, lat, lng },
+      });
 
       // insert or update user's location in PostGIS
-      await prisma.$executeRaw`
-        INSERT INTO "Location" ("userId", "point")
-        VALUES (${socket.userId}, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326))
-        ON CONFLICT ("userId")
-        DO UPDATE SET "point" = EXCLUDED."point", "updatedAt" = now();
-      `;
+      //await prisma.$executeRaw`
+      //  INSERT INTO "Location" ("userId", "point")
+      //  VALUES (${socket.userId}, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326))
+      //  ON CONFLICT ("userId")
+      //  DO UPDATE SET "point" = EXCLUDED."point", "updatedAt" = now();
+      //`;
 
       // find users allowed to see this location
       const shares = await prisma.share.findMany({
