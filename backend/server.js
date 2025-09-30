@@ -24,6 +24,10 @@ app.use(express.json());
 const authRoutes = require("./routes/auth");
 app.use("/auth", authRoutes);
 
+// mount shares route
+const sharesRoutes = require("./routes/shares");
+app.use("/shares", sharesRoutes);
+
 // protected profile route
 app.get("/profile", authMiddleware, async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.userId } });
