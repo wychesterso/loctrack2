@@ -24,7 +24,7 @@ export default function Map({ token }) {
     return () => s.disconnect();
   }, [token]);
 
-  // send own location every 10s
+  // send location every 10s
   useEffect(() => {
     if (!socket) return;
 
@@ -43,7 +43,7 @@ export default function Map({ token }) {
   }, [socket]);
 
   return (
-    <MapContainer center={[-27.47, 153.03]} zoom={13} style={{ height: "100vh" }}>
+    <MapContainer center={[-27.47, 153.03]} zoom={5} style={{ height: "100vh" }}>
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       {Object.entries(locations).map(([userId, loc]) => (
         <Marker key={userId} position={[loc.lat, loc.lng]}>
