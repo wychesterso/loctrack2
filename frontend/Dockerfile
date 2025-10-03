@@ -1,4 +1,5 @@
 FROM node:20.19.0
+
 WORKDIR /app
 
 # dependencies
@@ -8,9 +9,6 @@ RUN npm install
 # copy code
 COPY . .
 
-# prisma client
-RUN npx prisma generate
+EXPOSE 5173
 
-EXPOSE 4000
-
-CMD ["node", "server.js"]
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

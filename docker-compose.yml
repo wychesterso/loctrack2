@@ -1,0 +1,40 @@
+services:
+    db:
+        image: postgis/postgis:14-3.2
+        container_name: loctrack2-db
+        restart: always
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: loctrack2
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+
+    backend:
+        build: ./backend
+        container_name: loctrack2-backend
+        restart: always
+        depends_on:
+            - db
+        environment:
+            DATABASE_URL: "postgresql://postgres:postgres@db:5432/loctrack2"
+            JWT_SECRET: "superdupersecretkey"
+        ports:
+            - "4000:4000"
+        command: sh -c "npx prisma migrate deploy && node server.js"
+
+    frontend:
+        build: ./frontend
+        container_name: loctrack2-frontend
+        restart: always
+        depends_on:
+            - backend
+        environment:
+            VITE_API_URL: "http://localhost:4000"
+        ports:
+            - "5173:5173"
+
+volumes:
+    postgres_data:
